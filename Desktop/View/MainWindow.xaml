@@ -4,9 +4,7 @@
         Title="Вход в систему" Height="450" Width="800">
 
     <Grid>
-        <!-- Frame для навигации между страницами -->
         <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden">
-            <!-- Начальная страница - страница логина -->
             <Frame.Content>
                 <Grid>
                     <Button x:Name="Login" Content="Войти" HorizontalAlignment="Left" Margin="400,287,0,0" VerticalAlignment="Top" Height="48" Width="326" Background="#FFF96060" Foreground="White" BorderBrush="{x:Null}" FontSize="18" Click="Login_Click">

@@ -355,7 +355,6 @@ namespace Desktop
 
             if (result == MessageBoxResult.Yes)
             {
-                // Навигация на страницу логина
                 MainWindow loginPage = new MainWindow();
                 NavigationService.Navigate(loginPage);
             }
