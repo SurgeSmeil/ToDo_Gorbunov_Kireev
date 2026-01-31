@@ -4,25 +4,19 @@
         Title="Вход в систему" Height="450" Width="800">
 
     <Grid>
-        <!-- Frame для навигации между страницами -->
         <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden">
-            <!-- Начальная страница - страница логина -->
             <Frame.Content>
                 <Grid>
-                    <Button x:Name="Login" Content="Войти" HorizontalAlignment="Left" Margin="400,287,0,0" VerticalAlignment="Top" Height="48" Width="326" Background="#FFF96060" Foreground="White" BorderBrush="{x:Null}" FontSize="18" Click="Login_Click">
-                        <Button.Resources>
-                            <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="15 15 5 5"/>
-                            </Style>
-                        </Button.Resources>
-                    </Button>
-                    <Button Content="Регистрация" HorizontalAlignment="Left" Margin="401,351,0,0" VerticalAlignment="Top" Height="48" Width="327" Background="#FFF96060" Foreground="White" BorderBrush="{x:Null}" FontSize="18" Click="Button_Click">
-                        <Button.Resources>
-                            <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="5 5 15 15"/>
-                            </Style>
-                        </Button.Resources>
-                    </Button>
+                    <Button x:Name="Login" Content="Войти" HorizontalAlignment="Left" Margin="400,287,0,0" VerticalAlignment="Top" Height="48" Width="326" Background="#FFF96060" Foreground="White" FontSize="18" Click="Login_Click"
+                            Style="{StaticResource AnimatedButtonStyle}"
+                            Template="{StaticResource RoundedButtonTemplate}"
+                            Tag="15,15,5,5"/>
+
+                    <Button Content="Регистрация" HorizontalAlignment="Left" Margin="401,351,0,0" VerticalAlignment="Top" Height="48" Width="327" Background="#FFF96060" Foreground="White" FontSize="18" Click="Button_Click"
+                            Style="{StaticResource AnimatedButtonStyle}"
+                            Template="{StaticResource RoundedButtonTemplate}"
+                            Tag="5,5,15,15"/>
+
                     <Image HorizontalAlignment="Left" Height="194" Margin="32,29,0,0" VerticalAlignment="Top" Width="229" Source="/logo.png" RenderTransformOrigin="0.5,0.5">
                         <Image.RenderTransform>
                             <TransformGroup>

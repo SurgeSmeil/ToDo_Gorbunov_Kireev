@@ -35,18 +35,14 @@ namespace Desktop
                     var user = UserRepository.GetUserByEmail(email);
                     if (user != null)
                     {
-                        // Переход на главную страницу
-                        // Проверяем, есть ли задачи у пользователя
                         bool hasTasks = TaskRepository.UserHasTasks(user.Id);
 
                         if (hasTasks)
                         {
-                            // Переход на страницу с задачами
                             NavigationService.Navigate(new MainTasks(user.Id, user.Name));
                         }
                         else
                         {
-                            // Переход на пустую главную страницу
                             NavigationService.Navigate(new Main_Empty(user.Id, user.Name));
                         }
                     }
@@ -104,8 +100,6 @@ namespace Desktop
         {
             return !string.IsNullOrEmpty(name) && name.Length >= 3 && name != "Введите имя пользователя";
         }
-
-        // Методы для обработки подсказок в текстовых полях
         private void NameTextBox_GotFocus(object sender, RoutedEventArgs e)
         {
             if (NameTextBox.Text == "Введите имя пользователя")

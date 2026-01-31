@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace Desktop
 {
@@ -20,8 +21,42 @@ namespace Desktop
             InitializeComponent();
             _currentUserId = userId;
             _userName = userName;
+
+            this.Loaded += OnPageLoaded;
+            
+
             LoadUserData();
             LoadTasks();
+        }
+        private void OnNavigated(object sender, System.Windows.Navigation.NavigationEventArgs e)
+        {
+            if (e.Content == this)
+            {
+                var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300));
+                this.BeginAnimation(OpacityProperty, fadeIn);
+
+                LoadTasks();
+            }
+        }
+
+        private void OnPageLoaded(object sender, RoutedEventArgs e)
+        {
+            StartPageAnimation();
+            this.Loaded -= OnPageLoaded;
+        }
+
+        private void StartPageAnimation()
+        {
+            try
+            {
+                var slideIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(400));
+                slideIn.EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut };
+                this.BeginAnimation(OpacityProperty, slideIn);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка анимации входа: {ex.Message}");
+            }
         }
 
         private void LoadUserData()
@@ -77,7 +112,7 @@ namespace Desktop
 
         private Button CreateCategoryButton(string text)
         {
-            return new Button
+            var button = new Button
             {
                 Content = text,
                 Background = Brushes.Transparent,
@@ -88,6 +123,25 @@ namespace Desktop
                 Padding = new Thickness(10, 5, 10, 5),
                 Cursor = System.Windows.Input.Cursors.Hand
             };
+
+            button.RenderTransformOrigin = new Point(0.5, 0.5);
+            button.RenderTransform = new ScaleTransform(1, 1);
+
+            button.MouseEnter += (s, e) =>
+            {
+                var animation = new DoubleAnimation(1.1, TimeSpan.FromMilliseconds(200));
+                button.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, animation);
+                button.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, animation);
+            };
+
+            button.MouseLeave += (s, e) =>
+            {
+                var animation = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(200));
+                button.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, animation);
+                button.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, animation);
+            };
+
+            return button;
         }
 
         private void DisplayTasks(string category = null)
@@ -146,8 +200,14 @@ namespace Desktop
                 Margin = new Thickness(0, 0, 0, 10),
                 Padding = new Thickness(10),
                 Tag = task.Id,
-                Cursor = System.Windows.Input.Cursors.Hand
+                Cursor = System.Windows.Input.Cursors.Hand,
+                Opacity = 0,
+                RenderTransformOrigin = new Point(0.5, 0.5),
+                RenderTransform = new ScaleTransform(1, 1)
             };
+
+            var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300));
+            taskBorder.BeginAnimation(Border.OpacityProperty, fadeIn);
 
             var grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -174,9 +234,21 @@ namespace Desktop
                 {
                     IsChecked = task.IsCompleted,
                     VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(0, 0, 10, 0)
+                    Margin = new Thickness(0, 0, 10, 0),
+                    RenderTransformOrigin = new Point(0.5, 0.5),
+                    RenderTransform = new ScaleTransform(1, 1)
                 };
-                checkBox.Checked += (s, e) => UpdateTaskStatus(task.Id, true);
+
+                checkBox.Checked += (s, e) =>
+                {
+                    var scaleAnimation = new DoubleAnimation(1.3, TimeSpan.FromMilliseconds(100));
+                    scaleAnimation.AutoReverse = true;
+                    checkBox.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
+                    checkBox.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
+
+                    UpdateTaskStatus(task.Id, true);
+                };
+
                 checkBox.Unchecked += (s, e) => UpdateTaskStatus(task.Id, false);
 
                 Grid.SetColumn(checkBox, 0);
@@ -213,6 +285,23 @@ namespace Desktop
             grid.Children.Add(dateText);
 
             taskBorder.Child = grid;
+
+            taskBorder.MouseEnter += (s, e) =>
+            {
+                taskBorder.Background = new SolidColorBrush(Color.FromArgb(30, 0, 122, 204));
+                var scaleAnimation = new DoubleAnimation(1.02, TimeSpan.FromMilliseconds(200));
+                taskBorder.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
+                taskBorder.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
+            };
+
+            taskBorder.MouseLeave += (s, e) =>
+            {
+                taskBorder.Background = Brushes.Transparent;
+                var scaleAnimation = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(200));
+                taskBorder.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
+                taskBorder.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
+            };
+
             taskBorder.MouseLeftButtonDown += (s, e) => SelectTask(task);
 
             return taskBorder;
@@ -231,6 +320,11 @@ namespace Desktop
 
             CompleteButton.IsEnabled = !task.IsCompleted && !_showCompletedOnly;
             DeleteButton.IsEnabled = true;
+
+            var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300));
+            SelectedTaskTitle.BeginAnimation(TextBlock.OpacityProperty, fadeIn);
+            SelectedTaskDate.BeginAnimation(TextBlock.OpacityProperty, fadeIn);
+            SelectedTaskDescription.BeginAnimation(TextBlock.OpacityProperty, fadeIn);
         }
 
         private void UpdateTaskStatus(int taskId, bool isCompleted)
@@ -263,19 +357,29 @@ namespace Desktop
 
         private void AddTaskButton_Click(object sender, RoutedEventArgs e)
         {
-            CreateTask createTaskPage = new CreateTask(_currentUserId);
-            createTaskPage.Returned += (s, args) =>
+            StartPageTransition(() =>
             {
-                LoadTasks();
-            };
+                CreateTask createTaskPage = new CreateTask(_currentUserId, _userName);
+                createTaskPage.Returned += (s, args) =>
+                {
+                    LoadTasks();
+                };
 
-            NavigationService.Navigate(createTaskPage);
+                NavigationService.Navigate(createTaskPage);
+
+            });
         }
 
         private void CompleteButton_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedTask != null && !_selectedTask.IsCompleted)
             {
+                var button = sender as Button;
+                var scaleAnimation = new DoubleAnimation(0.9, TimeSpan.FromMilliseconds(100));
+                scaleAnimation.AutoReverse = true;
+                button.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
+                button.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
+
                 UpdateTaskStatus(_selectedTask.Id, true);
                 CompleteButton.IsEnabled = false;
                 LoadTasks();
@@ -298,12 +402,25 @@ namespace Desktop
                             _tasks.Remove(_selectedTask);
                             _selectedTask = null;
 
-                            SelectedTaskTitle.Text = "Заголовок";
-                            SelectedTaskDate.Text = "Нет даты";
-                            SelectedTaskDescription.Text = "Выберите задачу для просмотра деталей";
+                            var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(300));
+                            SelectedTaskTitle.BeginAnimation(TextBlock.OpacityProperty, fadeOut);
+                            SelectedTaskDate.BeginAnimation(TextBlock.OpacityProperty, fadeOut);
+                            SelectedTaskDescription.BeginAnimation(TextBlock.OpacityProperty, fadeOut);
 
-                            CompleteButton.IsEnabled = false;
-                            DeleteButton.IsEnabled = false;
+                            Dispatcher.BeginInvoke(new Action(() =>
+                            {
+                                SelectedTaskTitle.Text = "Заголовок";
+                                SelectedTaskDate.Text = "Нет даты";
+                                SelectedTaskDescription.Text = "Выберите задачу для просмотра деталей";
+
+                                CompleteButton.IsEnabled = false;
+                                DeleteButton.IsEnabled = false;
+
+                                var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300));
+                                SelectedTaskTitle.BeginAnimation(TextBlock.OpacityProperty, fadeIn);
+                                SelectedTaskDate.BeginAnimation(TextBlock.OpacityProperty, fadeIn);
+                                SelectedTaskDescription.BeginAnimation(TextBlock.OpacityProperty, fadeIn);
+                            }), TimeSpan.FromMilliseconds(300));
 
                             LoadTasks();
                         }
@@ -320,6 +437,19 @@ namespace Desktop
         private void HistoryButton_Click(object sender, RoutedEventArgs e)
         {
             _showCompletedOnly = !_showCompletedOnly;
+
+            var button = sender as Button;
+            var rotateTransform = button.RenderTransform as RotateTransform;
+            if (rotateTransform == null)
+            {
+                rotateTransform = new RotateTransform();
+                button.RenderTransform = rotateTransform;
+            }
+
+            var rotateAnimation = new DoubleAnimation(_showCompletedOnly ? 180 : 0,
+                TimeSpan.FromMilliseconds(300));
+            rotateTransform.BeginAnimation(RotateTransform.AngleProperty, rotateAnimation);
+
             if (_showCompletedOnly)
             {
                 HistoryButton.Content = "←";
@@ -355,9 +485,32 @@ namespace Desktop
 
             if (result == MessageBoxResult.Yes)
             {
-                // Навигация на страницу логина
-                MainWindow loginPage = new MainWindow();
-                NavigationService.Navigate(loginPage);
+                StartPageTransition(() =>
+                {
+                    MainWindow loginPage = new MainWindow();
+                    NavigationService.Navigate(loginPage);
+                });
+            }
+        }
+
+        private void StartPageTransition(Action navigationAction)
+        {
+            try
+            {
+                var slideOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(300));
+                slideOut.EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut };
+
+                this.BeginAnimation(OpacityProperty, slideOut);
+
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    navigationAction.Invoke();
+                }), System.Windows.Threading.DispatcherPriority.Normal, null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка анимации: {ex.Message}");
+                navigationAction.Invoke();
             }
         }
     }

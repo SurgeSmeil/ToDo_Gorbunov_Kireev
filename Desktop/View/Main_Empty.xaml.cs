@@ -21,7 +21,7 @@ namespace Desktop
         {
             if (NavigationService != null)
             {
-                CreateTask createTaskPage = new CreateTask(_userId);
+                CreateTask createTaskPage = new CreateTask(_userId, _userName);
                 NavigationService.Navigate(createTaskPage);
             }
             else
